@@ -2,7 +2,7 @@
 
 Simple GUI game of Tic-Tac-Toe written in Golang and Fyne framework v2.3.0. For 2 local (human) players. Works for
 Windows, MacOS and Linux. Can even be compiled to Android and iOS (macOS required) apps. 
-- Learn more about _fyne_ at https://fyne.io
+- Learn more about fyne at https://developer.fyne.io/
 
 ## Building locally
 
@@ -22,7 +22,7 @@ fyne build
 
 ```bash
 # For more flags, use: fyne release --help
-# --icon is optional. --id is required. 
+# --icon is optional. --id is required, can be anything. 
 fyne release --icon game_icon.png --id com.yourdomain.appName
 ```
 
