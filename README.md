@@ -16,7 +16,6 @@ Windows, MacOS and Linux. Can even be compiled to Android and iOS (macOS require
 # For more flags, use: fyne build --help
 fyne build
 ```
-
 5. First time build will take quite some time to complete. But subsequent builds will be faster.
 6. To build a smaller executable (50% smaller than one above), use:
 
