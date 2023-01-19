@@ -1,3 +1,9 @@
+# Intellij project files
+*.iml
+*.ipr
+*.iws
+.idea/
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
