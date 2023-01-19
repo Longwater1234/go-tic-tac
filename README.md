@@ -4,10 +4,6 @@ Simple GUI game of Tic-Tac-Toe written in Golang and Fyne framework v2.3.0. For 
 Windows, MacOS and Linux. Can even be compiled to Android and iOS (macOS required) apps. 
 - Learn more about fyne at https://developer.fyne.io/
 
-## Quick Start
-
-Jump to the releases page and download pre-built executable. No installation required. Just double click to start.
-
 ## Building locally
 
 1. Make sure you have >=Go 1.18 and GCC installed on your machine, then add both to your PATH. Follow
