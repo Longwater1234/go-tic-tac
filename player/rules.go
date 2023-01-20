@@ -40,7 +40,7 @@ func (s SymbolGame) String() string {
 
 // HasWon returns true if player has won
 func (p *Player) HasWon() bool {
-	var markedCells = p.Vals
+	var markedCells []int = p.Vals
 	if len(markedCells) < 3 {
 		return false
 	}
