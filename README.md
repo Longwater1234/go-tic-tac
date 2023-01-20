@@ -29,7 +29,7 @@ fyne package --release --id com.yourdomain.appName
 
 ## Credits
 
-Icon by  [Vlad Marin, IconFinder](https://www.iconfinder.com/icons/190320/game_tac_tic_red_toe_icon)
+Free Icon by [Vlad Marin, IconFinder](https://www.iconfinder.com/icons/190320/game_tac_tic_red_toe_icon).
 
 ## License
 
