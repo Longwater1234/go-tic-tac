@@ -5,6 +5,7 @@
 package main
 
 import (
+	_ "embed"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
@@ -13,8 +14,10 @@ import (
 	"go-tic-tac/game"
 	"go-tic-tac/player"
 	"image/color"
-	"log"
 )
+
+//go:embed icon.png
+var icon []byte
 
 func init() {
 	game.InitializeRecord()
@@ -46,10 +49,7 @@ func main() {
 
 	w.SetContent(grid)
 	w.Resize(fyne.NewSize(900, 600))
-	r, e := fyne.LoadResourceFromPath("game_icon.png")
-	if e != nil {
-		log.Fatalln(e)
-	}
+	r := fyne.NewStaticResource("icon.png", icon)
 	w.Show()
 	w.SetIcon(r)
 	w.SetFixedSize(true)

@@ -1,7 +1,8 @@
 # go-tic-tac
 
 Simple GUI game of Tic-Tac-Toe written in Golang and Fyne framework v2.3.0. For 2 local (human) players. Works for
-Windows, MacOS and Linux. Can even be compiled to Android and iOS (macOS required) apps. 
+Windows, macOS and Linux. Can even be compiled to Android and iOS (macOS required) apps.
+
 - Learn more about fyne at https://developer.fyne.io/
 
 ## Building locally
@@ -10,28 +11,31 @@ Windows, MacOS and Linux. Can even be compiled to Android and iOS (macOS require
    this [guide](https://developer.fyne.io/started/#prerequisites) for your specific OS.
 2. To verify *gcc* is correctly installed, open terminal/CMD, enter `gcc --version`
 3. Install the Fyne v2 CLI. `go install fyne.io/fyne/v2@latest`
-4. Go to this project root directory, and open terminal and enter
+4. Go to this project root directory, open terminal and enter:
 
 ```bash
-# For more flags, use: fyne build --help
-fyne build
+# For more flags, use: fyne package --help
+fyne package
 ```
+
 5. First time build will take quite some time to complete. But subsequent builds will be much faster.
-6. To build a smaller executable (50% smaller than one above), use:
+6. For an optimized, smaller executable (50% smaller than one above), use command below. Another option for compression
+   is to use `upx` tool.
 
 ```bash
-# For more flags, use: fyne release --help
-# --icon is optional. --id is required. See docs. 
-fyne release --icon game_icon.png --id com.yourdomain.appName
+# Flag --id (appID) is required. See docs https://developer.fyne.io/started/distribution
+fyne package --release --id com.yourdomain.appName
 ```
 
 ## Credits
+
 Icon by  [Vlad Marin, IconFinder](https://www.iconfinder.com/icons/190320/game_tac_tic_red_toe_icon)
 
 ## License
 
-This project is [MIT](LICENSE) licensed.
+2023, Davis Tibbz. This project is [MIT](LICENSE) licensed.
 
 ## Pull Requests & Contributions
+
 So much improvement can be done on the game. This is as simple as it can be. Pull requests and issues are much welcome.
 

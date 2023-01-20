@@ -41,6 +41,10 @@ func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 
 // Tapped overrides onClick listener
 func (g *gridBox) Tapped(*fyne.PointEvent) {
+	if g.textVal.Text != "" {
+		//already filled
+		return
+	}
 	if isPlayerXTurn {
 		g.textVal.Text = player.X.String()
 		isPlayerXTurn = false

@@ -18,7 +18,7 @@ var winningPatterns = [][]int{
 // Player of the game, only 2 per game
 type Player struct {
 	Name string // Name can only be X or O
-	Vals []int  // indexes of cells chosen by player
+	Vals []int  // cell indexes clicked by player
 }
 
 type SymbolGame int
