@@ -80,13 +80,14 @@ func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gr
 		TextSize:  float32(80),
 	}
 
-	g := &gridBox{}
+	g := &gridBox{
+		Index:     Index,
+		rectangle: rectangle,
+		textVal:   tv,
+		container: container.NewMax(rectangle, tv),
+		window:    window,
+	}
 	g.ExtendBaseWidget(g)
-	g.rectangle = rectangle
-	g.Index = Index
-	g.textVal = tv
-	g.window = window
-	g.container = container.NewMax(g.rectangle, tv)
 	gridMap[Index] = g
 	return g
 }
