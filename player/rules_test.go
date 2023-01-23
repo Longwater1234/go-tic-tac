@@ -39,7 +39,7 @@ func TestPlayer_HasWon(t *testing.T) {
 				Name: tt.fields.Name,
 				Vals: tt.fields.Vals,
 			}
-			if got := p.HasWon(); got != tt.want {
+			if got, _ := p.HasWon(); got != tt.want {
 				t.Errorf("HasWon() = %v, want %v", got, tt.want)
 			}
 		})

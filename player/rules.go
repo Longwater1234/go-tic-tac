@@ -38,18 +38,19 @@ func (s SymbolGame) String() string {
 	return "unknown"
 }
 
-// HasWon returns true if player has won
-func (p *Player) HasWon() bool {
-	var markedCells []int = p.Vals
+// HasWon returns true if player has won.
+// Also returns the winningPattern array
+func (p *Player) HasWon() (bool, []int) {
+	var markedCells = p.Vals
 	if len(markedCells) < 3 {
-		return false
+		return false, []int{}
 	}
 
 	for i := 0; i < len(winningPatterns); i++ {
 		arr := winningPatterns[i]
 		if slices.Contains(markedCells, arr[0]) && slices.Contains(markedCells, arr[1]) && slices.Contains(markedCells, arr[2]) {
-			return true
+			return true, arr
 		}
 	}
-	return false
+	return false, []int{}
 }

@@ -20,6 +20,7 @@ var _ fyne.Tappable = (*gridBox)(nil)
 
 var gameRecord map[int]player.SymbolGame  //keeps record of the game (cellIndex -> symbol)
 var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
+var gridMap map[int]*gridBox              //maps cellIndex to gridBox
 
 // Single cell inside the 3x3 grid.
 // Custom widget. See https://developer.fyne.io/extend/custom-widget
@@ -35,6 +36,7 @@ type gridBox struct {
 // default starts with X
 var isPlayerXTurn = true
 
+// CreateRenderer overrides default for custom widgets
 func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(g.container)
 }
@@ -81,6 +83,7 @@ func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gr
 	g.textVal = tv
 	g.window = window
 	g.container = container.NewMax(g.rectangle, tv)
+	gridMap[Index] = g
 	return g
 }
 
@@ -104,10 +107,26 @@ func (g *gridBox) getWinner() string {
 	p.Vals = append(p.Vals, g.Index)
 
 	//log.Printf("Game scoreboard %v", gameRecord)
-	if p.HasWon() {
-		return fmt.Sprintf("Player %v has Won!", p.Name)
+
+	if ok, arr := p.HasWon(); ok {
+		highlightBoxes(arr)
+		return fmt.Sprintf("Player %s has Won!", p.Name)
 	}
 	return ""
+}
+
+// color Green for winning grid pattern
+func highlightBoxes(arr []int) {
+	for _, v := range arr {
+		g := gridMap[v]
+		g.rectangle.FillColor = color.RGBA{
+			R: 0,
+			G: 255,
+			B: 0,
+			A: 255,
+		}
+		g.Refresh()
+	}
 }
 
 // shows Winner and exit game
@@ -123,6 +142,7 @@ func (g *gridBox) displayWinner(msg string) {
 // InitializeRecord (scoreboard) for the game
 func InitializeRecord() {
 	gameRecord = make(map[int]player.SymbolGame)
+	gridMap = make(map[int]*gridBox)
 }
 
 // InitializePlayers of the game, must be exactly 2 players

@@ -19,7 +19,7 @@ import (
 //go:embed icon.png
 var icon []byte
 
-func init() {
+func initGame() {
 	game.InitializeRecord()
 	var players = []player.Player{{
 		Name: player.X.String(),
@@ -32,6 +32,7 @@ func init() {
 }
 
 func main() {
+	initGame()
 	myApp := app.New()
 	w := myApp.NewWindow("Tic-Tac-Tiba")
 	grid := container.New(layout.NewGridLayout(3))

@@ -1,7 +1,7 @@
 # go-tic-tac
 
-Simple GUI game of Tic-Tac-Toe written in Golang and Fyne framework v2.3.0. For 2 local (human) players. Works for
-Windows, macOS and Linux. Can even be compiled to Android and iOS (macOS required) apps.
+Simple GUI game of Tic-Tac-Toe written in Golang and Fyne v2.3.0. For 2 local (human) players. Works for Windows, macOS
+and Linux. Can even be compiled to Android and iOS (macOS required) apps.
 
 - Learn more about fyne at https://developer.fyne.io/
 
@@ -33,7 +33,7 @@ Free Icon by [Vlad Marin, IconFinder](https://www.iconfinder.com/icons/190320/ga
 
 ## License
 
-2023, Davis Tibbz. This project is [MIT](LICENSE) licensed.
+&copy; 2023, Davis Tibbz. This project is [MIT](LICENSE) licensed.
 
 ## Pull Requests & Contributions
 
