@@ -36,6 +36,7 @@ type gridBox struct {
 
 // default starts with X
 var isPlayerXTurn = true
+var gameOver = false
 
 // CreateRenderer overrides default for custom widgets
 func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
@@ -44,7 +45,7 @@ func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 
 // Tapped overrides onClick listener
 func (g *gridBox) Tapped(*fyne.PointEvent) {
-	if g.textVal.Text != "" {
+	if g.textVal.Text != "" || gameOver {
 		//already filled
 		return
 	}
@@ -59,6 +60,7 @@ func (g *gridBox) Tapped(*fyne.PointEvent) {
 	}
 
 	if g.getWinner() != "" {
+		gameOver = true
 		go func() {
 			time.Sleep(1 * time.Second)
 			g.displayWinner(g.getWinner())
