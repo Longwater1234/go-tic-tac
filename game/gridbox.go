@@ -14,6 +14,7 @@ import (
 	"go-tic-tac/player"
 	"image/color"
 	"log"
+	"time"
 )
 
 var _ fyne.Tappable = (*gridBox)(nil)
@@ -58,7 +59,10 @@ func (g *gridBox) Tapped(*fyne.PointEvent) {
 	}
 
 	if g.getWinner() != "" {
-		g.displayWinner(g.getWinner())
+		go func() {
+			time.Sleep(1 * time.Second)
+			g.displayWinner(g.getWinner())
+		}()
 		return
 	}
 	if g.allBoxFilled() {
