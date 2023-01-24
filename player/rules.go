@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023, Davis Tibbz, MIT License.
+ */
+
 package player
 
 import (

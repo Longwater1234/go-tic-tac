@@ -17,20 +17,14 @@ func TestPlayer_HasWon(t *testing.T) {
 		want   bool
 	}{
 		{
-			name: "Player_X_won",
-			fields: struct {
-				Name string
-				Vals []int
-			}{Name: "X", Vals: []int{2, 3, 5, 8}},
-			want: true,
+			name:   "Won",
+			fields: fields{Name: "X", Vals: []int{2, 3, 5, 8}},
+			want:   true,
 		},
 		{
-			name: "Player_X_not_Won",
-			fields: struct {
-				Name string
-				Vals []int
-			}{Name: "X", Vals: []int{0, 3, 8}},
-			want: false,
+			name:   "NotWon",
+			fields: fields{Name: "X", Vals: []int{0, 3, 8}},
+			want:   false,
 		},
 	}
 	for _, tt := range tests {

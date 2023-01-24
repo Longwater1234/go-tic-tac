@@ -31,14 +31,14 @@ type gridBox struct {
 	rectangle *canvas.Rectangle //background of cell
 	textVal   *canvas.Text      //text box
 	container *fyne.Container   //hosts textVal and rectangle
-	window    *fyne.Window      // master window
+	window    *fyne.Window      //master window
 }
 
 // default starts with X
 var isPlayerXTurn = true
 var gameOver = false
 
-// CreateRenderer overrides default for custom widgets
+// CreateRenderer for custom widgets
 func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(g.container)
 }
@@ -62,7 +62,7 @@ func (g *gridBox) Tapped(*fyne.PointEvent) {
 	if g.getWinner() != "" {
 		gameOver = true
 		go func() {
-			time.Sleep(1 * time.Second)
+			time.Sleep(500 * time.Millisecond)
 			g.displayWinner(g.getWinner())
 		}()
 		return
@@ -108,7 +108,7 @@ func (g *gridBox) allBoxFilled() bool {
 	return false
 }
 
-// Evaluate who won the match
+// getWinner of the match
 func (g *gridBox) getWinner() string {
 	var p = playerState[g.textVal.Text]
 	p.Vals = append(p.Vals, g.Index)
@@ -122,7 +122,7 @@ func (g *gridBox) getWinner() string {
 	return ""
 }
 
-// color Green for winning grid pattern
+// highlightBoxes green color (winning cells)
 func highlightBoxes(arr []int) {
 	for _, v := range arr {
 		g := gridMap[v]
@@ -136,7 +136,7 @@ func highlightBoxes(arr []int) {
 	}
 }
 
-// shows Winner and exit game
+// displayWinner and exit game
 func (g *gridBox) displayWinner(msg string) {
 	d := dialog.NewInformation("Game Over!", msg, *g.window)
 	d.SetOnClosed(func() {
@@ -146,13 +146,14 @@ func (g *gridBox) displayWinner(msg string) {
 	d.Show()
 }
 
-// InitializeRecord (scoreboard) for the game
+// InitializeRecord for the game
 func InitializeRecord() {
 	gameRecord = make(map[int]player.SymbolGame)
 	gridMap = make(map[int]*gridBox)
+	gameOver = false
 }
 
-// InitializePlayers of the game, must be exactly 2 players
+// InitializePlayers of the game, must be two exactly
 func InitializePlayers(p []player.Player) {
 	if len(p) != 2 {
 		log.Fatalf("players must be exactly 2, provided %d", len(p))
