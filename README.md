@@ -10,7 +10,7 @@ and Linux. Can even be compiled to Android and iOS (macOS required) apps.
 1. Make sure you have >=Go 1.18 and GCC installed on your machine, then add both to your PATH. Follow
    this [guide](https://developer.fyne.io/started/#prerequisites) for your specific OS.
 2. To verify *gcc* is correctly installed, open terminal/CMD, enter `gcc --version`
-3. Install the Fyne v2 CLI. `go install fyne.io/fyne/v2@latest`
+3. Install the Fyne v2 CLI. `go install fyne.io/fyne/v2/cmd/fyne@latest`
 4. Go to this project root directory, open terminal and enter:
 
 ```bash
