@@ -16,7 +16,7 @@ import (
 	"image/color"
 )
 
-//go:embed icon.png
+//go:embed Icon.png
 var icon []byte
 
 func initGame() {
@@ -50,7 +50,7 @@ func main() {
 
 	w.SetContent(grid)
 	w.Resize(fyne.NewSize(900, 600))
-	r := fyne.NewStaticResource("icon.png", icon)
+	r := fyne.NewStaticResource("Icon.png", icon)
 	w.Show()
 	w.SetIcon(r)
 	w.SetFixedSize(true)
