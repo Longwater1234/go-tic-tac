@@ -125,15 +125,17 @@ func (g *gridBox) getWinner() string {
 // highlightBoxes green color (winning cells)
 func highlightBoxes(arr []int) {
 	for _, v := range arr {
-		g := gridMap[v]
-		g.rectangle.FillColor = color.RGBA{
-			R: 0,
-			G: 255,
-			B: 0,
-			A: 255,
+		if g, ok := gridMap[v]; ok {
+			g.rectangle.FillColor = color.RGBA{
+				R: 0,
+				G: 255,
+				B: 0,
+				A: 255,
+			}
+			g.Refresh()
 		}
-		g.Refresh()
 	}
+
 }
 
 // displayWinner and exit game
