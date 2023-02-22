@@ -94,7 +94,7 @@ func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gr
 	return g
 }
 
-// checks if all cells filled. If true, game over
+// checks if all cells filled. If true, it's a draw
 func (g *gridBox) allBoxFilled() bool {
 	if len(gameRecord) == 9 {
 		d := dialog.NewInformation("Game Over", "It's a draw", *g.window)

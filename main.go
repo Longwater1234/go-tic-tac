@@ -35,6 +35,8 @@ func main() {
 	initGame()
 	myApp := app.New()
 	w := myApp.NewWindow("Tic-Tac-Tiba")
+
+	textObject := canvas.NewText("Connecting", color.White)
 	grid := container.New(layout.NewGridLayout(3))
 	for i := 0; i < 9; i++ {
 		rect := canvas.NewRectangle(color.RGBA{
@@ -48,8 +50,10 @@ func main() {
 		grid.Add(gridBox)
 	}
 
-	w.SetContent(grid)
-	w.Resize(fyne.NewSize(900, 600))
+	mainWindow := container.NewVSplit(grid, textObject)
+	mainWindow.SetOffset(0.8)
+	w.SetContent(mainWindow)
+	w.Resize(fyne.NewSize(900, 800))
 	r := fyne.NewStaticResource("Icon.png", icon)
 	w.Show()
 	w.SetIcon(r)
