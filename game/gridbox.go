@@ -27,11 +27,12 @@ var gridMap map[int]*gridBox              //maps cellIndex to gridBox
 // Custom widget. See https://developer.fyne.io/extend/custom-widget
 type gridBox struct {
 	widget.BaseWidget
-	Index     int               //cell index
-	rectangle *canvas.Rectangle //background of cell
-	textVal   *canvas.Text      //text box
-	container *fyne.Container   //hosts textVal and rectangle
-	window    *fyne.Window      //master window
+	Index       int               //cell index
+	rectangle   *canvas.Rectangle //background of cell
+	textVal     *canvas.Text      //text box
+	container   *fyne.Container   //hosts textVal and rectangle
+	window      *fyne.Window      //master window
+	payloadChan chan Payload      //communicates with server
 }
 
 // default starts with X
@@ -44,7 +45,7 @@ func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 }
 
 // Tapped overrides onClick listener
-func (g *gridBox) Tapped(*fyne.PointEvent) {
+func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 	if g.textVal.Text != "" || gameOver {
 		//already filled
 		return
@@ -73,8 +74,8 @@ func (g *gridBox) Tapped(*fyne.PointEvent) {
 	g.Refresh()
 }
 
-// NewGridBox creates a new single cell for grid
-func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gridBox {
+// NewGridBox creates a new single cell of grid
+func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window, payloads chan Payload) *gridBox {
 	tv := &canvas.Text{
 		Text:      "",
 		Alignment: fyne.TextAlignCenter,
@@ -83,11 +84,12 @@ func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gr
 	}
 
 	g := &gridBox{
-		Index:     Index,
-		rectangle: rectangle,
-		textVal:   tv,
-		container: container.NewMax(rectangle, tv),
-		window:    window,
+		Index:       Index,
+		rectangle:   rectangle,
+		textVal:     tv,
+		container:   container.NewMax(rectangle, tv),
+		window:      window,
+		payloadChan: payloads,
 	}
 	g.ExtendBaseWidget(g)
 	gridMap[Index] = g
@@ -125,7 +127,7 @@ func (g *gridBox) getWinner() string {
 // highlightBoxes green color (winning cells)
 func highlightBoxes(arr []int) {
 	for _, v := range arr {
-		if g, ok := gridMap[v]; ok {
+		if g, exists := gridMap[v]; exists {
 			g.rectangle.FillColor = color.RGBA{
 				R: 0,
 				G: 255,
