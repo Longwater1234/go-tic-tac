@@ -11,9 +11,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
-	"github.com/tevino/abool"
 	"go-tic-tac/game"
-	"go-tic-tac/player"
 	"go-tic-tac/sock"
 	"image/color"
 )
@@ -21,18 +19,9 @@ import (
 //go:embed Icon.png
 var icon []byte
 
-var IsMyTurn abool.AtomicBool = 1
-
 func initGame() {
 	game.InitializeRecord()
-	var players = []player.Player{{
-		Name: player.X.String(),
-		Vals: []int{},
-	}, {
-		Name: player.O.String(),
-		Vals: []int{},
-	}}
-	game.InitializePlayers(players)
+	//game.InitializePlayers(players)
 }
 
 func main() {
@@ -42,8 +31,9 @@ func main() {
 
 	textPanel := canvas.NewText("Connecting", color.White)
 	grid := container.New(layout.NewGridLayout(3))
-	payloadChan := make(chan game.Payload, 1) //for full responses from server
-	notifChan := make(chan string, 1)         // for notifications
+	serverChan := make(chan game.Payload) //for full responses from server
+	clientChan := make(chan game.Payload) //for full responses to server
+	notifChan := make(chan string)        // for on-screen notifications
 
 	for i := 0; i < 9; i++ {
 		rect := canvas.NewRectangle(color.RGBA{
@@ -53,7 +43,8 @@ func main() {
 			A: 255,
 		})
 
-		gridBox := game.NewGridBox(rect, i, &w, payloadChan)
+		commChannel := game.NewCommChannel(&serverChan, &clientChan)
+		gridBox := game.NewGridBox(rect, i, &w, commChannel)
 		grid.Add(gridBox)
 	}
 
@@ -66,7 +57,7 @@ func main() {
 	w.SetIcon(r)
 	w.SetFixedSize(true)
 
-	go sock.JoinServer(payloadChan, &w, notifChan)
+	go sock.JoinServer(serverChan, &w, notifChan, clientChan)
 	//updates the notification box
 	go func() {
 		for msg := range notifChan {

@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"go-tic-tac/game"
+	"go-tic-tac/player"
 	"golang.org/x/net/websocket"
 )
 
@@ -11,7 +12,7 @@ const origin = "http://localhost/"
 const endpoint = "ws://localhost:9876/ws"
 
 // JoinServer of game and handle responses
-func JoinServer(payloadChan chan game.Payload, w *fyne.Window, notifChan chan string) {
+func JoinServer(payloadChan chan game.Payload, w *fyne.Window, notifChan chan string, clientChan chan game.Payload) {
 	var payload game.Payload
 	ws, err := websocket.Dial(endpoint, "", origin)
 	if err != nil {
@@ -25,8 +26,31 @@ func JoinServer(payloadChan chan game.Payload, w *fyne.Window, notifChan chan st
 		showErrorAndQuit(payloadChan, w, err)
 		return
 	}
-	payloadChan <- payload
 	notifChan <- payload.Content
+	game.UpdateSymbol(payload.FromUser)
+
+	for {
+		select {
+		case v := <-payloadChan:
+			if v.MessageType == game.START {
+				if game.MyCurrentSymbol.ValString == player.X {
+					game.IsReady.Set()
+				}
+				return
+			} else if v.MessageType == game.EXIT {
+				notifChan <- v.Content
+			} else {
+				clientChan <- v
+			}
+		case load := <-clientChan:
+			err = game.SendMessage(&load, ws)
+			if err != nil {
+				showErrorAndQuit(payloadChan, w, err)
+				return
+			}
+		}
+
+	}
 }
 
 func showErrorAndQuit(msgChan chan game.Payload, w *fyne.Window, err error) {

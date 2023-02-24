@@ -11,32 +11,70 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"github.com/tevino/abool"
 	"go-tic-tac/player"
 	"image/color"
 	"log"
+	"strconv"
+	"sync"
 	"time"
 )
 
 var _ fyne.Tappable = (*gridBox)(nil)
 
-var gameRecord map[int]player.SymbolGame  //keeps record of the game (cellIndex -> symbol)
-var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
-var gridMap map[int]*gridBox              //maps cellIndex to gridBox
+var gameRecord map[int]string //keeps record of the game (cellIndex -> symbol)
+// var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
+var gridMap map[int]*gridBox      //maps cellIndex to gridBox
+var isMyTurn abool.AtomicBool = 1 // player turn,  default starts with X (player 1)
+
+type PieceType struct {
+	ValString player.SymbolGame
+	sync.Mutex
+}
+
+func (t *PieceType) SetPieceType(val string) {
+	t.Lock()
+	defer t.Unlock()
+	if val == player.X.String() {
+		t.ValString = player.X
+		isMyTurn.Set()
+	} else {
+		t.ValString = player.O
+		isMyTurn.UnSet()
+	}
+}
+
+var MyCurrentSymbol PieceType //default X
+
+var IsReady abool.AtomicBool = 0
+
+func UpdateSymbol(val string) {
+	MyCurrentSymbol.SetPieceType(val)
+}
 
 // Single cell inside the 3x3 grid.
 // Custom widget. See https://developer.fyne.io/extend/custom-widget
 type gridBox struct {
 	widget.BaseWidget
-	Index       int               //cell index
-	rectangle   *canvas.Rectangle //background of cell
-	textVal     *canvas.Text      //text box
-	container   *fyne.Container   //hosts textVal and rectangle
-	window      *fyne.Window      //master window
-	payloadChan chan Payload      //communicates with server
+	Index     int               //cell index
+	rectangle *canvas.Rectangle //background of cell
+	textVal   *canvas.Text      //text box
+	container *fyne.Container   //hosts textVal and rectangle
+	window    *fyne.Window      //master window
+	commChannel
 }
 
-// default starts with X
-var isPlayerXTurn = true
+// For communicating with game server
+type commChannel struct {
+	serverChan *chan Payload //recieves messages from server
+	clientChan *chan Payload // sends messages to Server
+}
+
+// NewCommChannel constructor
+func NewCommChannel(serverChan *chan Payload, clientChan *chan Payload) *commChannel {
+	return &commChannel{serverChan: serverChan, clientChan: clientChan}
+}
+
 var gameOver = false
 
 // CreateRenderer for custom widgets
@@ -46,36 +84,65 @@ func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 
 // Tapped overrides onClick listener
 func (g *gridBox) Tapped(_ *fyne.PointEvent) {
-	if g.textVal.Text != "" || gameOver {
+	if g.textVal.Text != "" || gameOver || isMyTurn.IsNotSet() {
 		//already filled
 		return
-	}
-	if isPlayerXTurn {
-		g.textVal.Text = player.X.String()
-		isPlayerXTurn = false
-		gameRecord[g.Index] = player.X
-	} else {
-		g.textVal.Text = player.O.String()
-		isPlayerXTurn = true
-		gameRecord[g.Index] = player.O
-	}
-
-	if g.getWinner() != "" {
-		gameOver = true
-		go func() {
-			time.Sleep(500 * time.Millisecond)
-			g.displayWinner(g.getWinner())
-		}()
+	} else if IsReady.IsNotSet() {
 		return
+	}
+	//if isPlayerXTurn {
+	//	g.textVal.Text = player.X.String()
+	//	isPlayerXTurn = false
+	//	gameRecord[g.Index] = player.X
+	//} else {
+	//	g.textVal.Text = player.O.String()
+	//	isPlayerXTurn = true
+	//	gameRecord[g.Index] = player.O
+	//}
+
+	for payload := range *g.commChannel.clientChan {
+		switch payload.MessageType {
+		case MOVE:
+			if isMyTurn.IsSet() {
+				isMyTurn.UnSet()
+				g.textVal.Text = MyCurrentSymbol.ValString.String()
+				gameRecord[g.Index] = MyCurrentSymbol.ValString.String()
+				pp := Payload{
+					MessageType: MOVE,
+					Content:     fmt.Sprintf("%d", g.Index),
+					FromUser:    MyCurrentSymbol.ValString.String(),
+				}
+				*g.clientChan <- pp
+
+			} else {
+				isMyTurn.UnSet()
+				targetIndex, _ := strconv.Atoi(payload.Content)
+				markGridBox(targetIndex, payload.FromUser)
+			}
+
+		case WIN:
+		case LOSE:
+			gameOver = true
+			go func() {
+				time.Sleep(500 * time.Millisecond)
+				g.displayWinner(payload.Content)
+			}()
+			close(*g.serverChan)
+			close(*g.clientChan)
+			return
+		default:
+			log.Println("Unknown command sent")
+		}
 	}
 	if g.allBoxFilled() {
 		return
 	}
+
 	g.Refresh()
 }
 
 // NewGridBox creates a new single cell of grid
-func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window, payloads chan Payload) *gridBox {
+func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window, commChannel *commChannel) *gridBox {
 	tv := &canvas.Text{
 		Text:      "",
 		Alignment: fyne.TextAlignCenter,
@@ -89,7 +156,7 @@ func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window, pay
 		textVal:     tv,
 		container:   container.NewMax(rectangle, tv),
 		window:      window,
-		payloadChan: payloads,
+		commChannel: *commChannel,
 	}
 	g.ExtendBaseWidget(g)
 	gridMap[Index] = g
@@ -110,19 +177,7 @@ func (g *gridBox) allBoxFilled() bool {
 	return false
 }
 
-// getWinner of the match
-func (g *gridBox) getWinner() string {
-	var p = playerState[g.textVal.Text]
-	p.Vals = append(p.Vals, g.Index)
-
-	//log.Printf("Game scoreboard %v", gameRecord)
-
-	if ok, arr := p.HasWon(); ok {
-		highlightBoxes(arr)
-		return fmt.Sprintf("Player %s has Won!", p.Name)
-	}
-	return ""
-}
+// getWinner of the m
 
 // highlightBoxes green color (winning cells)
 func highlightBoxes(arr []int) {
@@ -140,6 +195,18 @@ func highlightBoxes(arr []int) {
 
 }
 
+// markGridBox at given index with symbol (X or O)
+func markGridBox(targetIndex int, symbolChar string) {
+	for i, box := range gridMap {
+		if i == targetIndex {
+			box.textVal.Text = symbolChar
+			gameRecord[targetIndex] = symbolChar
+			box.Refresh()
+			break
+		}
+	}
+}
+
 // displayWinner and exit game
 func (g *gridBox) displayWinner(msg string) {
 	d := dialog.NewInformation("Game Over!", msg, *g.window)
@@ -152,18 +219,7 @@ func (g *gridBox) displayWinner(msg string) {
 
 // InitializeRecord for the game
 func InitializeRecord() {
-	gameRecord = make(map[int]player.SymbolGame)
+	gameRecord = make(map[int]string)
 	gridMap = make(map[int]*gridBox)
 	gameOver = false
-}
-
-// InitializePlayers of the game, must be two exactly
-func InitializePlayers(p []player.Player) {
-	if len(p) != 2 {
-		log.Fatalf("players must be exactly 2, provided %d", len(p))
-	}
-	playerState = map[string]*player.Player{
-		p[0].Name: &p[0],
-		p[1].Name: &p[1],
-	}
 }
