@@ -37,9 +37,11 @@ func (t *PieceType) SetPieceType(val string) {
 	defer t.Unlock()
 	if val == player.X.String() {
 		t.ValString = player.X
+		log.Println("i am player x")
 		isMyTurn.Set()
 	} else {
 		t.ValString = player.O
+		log.Println("i am player O")
 		isMyTurn.UnSet()
 	}
 }
@@ -66,13 +68,14 @@ type gridBox struct {
 
 // For communicating with game server
 type commChannel struct {
-	serverChan *chan Payload //recieves messages from server
-	clientChan *chan Payload // sends messages to Server
+	serverChan <-chan Payload //recieves messages from server
+	clientChan chan Payload   // sends messages to Server
+	replyChan  chan<- Payload
 }
 
 // NewCommChannel constructor
-func NewCommChannel(serverChan *chan Payload, clientChan *chan Payload) *commChannel {
-	return &commChannel{serverChan: serverChan, clientChan: clientChan}
+func NewCommChannel(serverChan <-chan Payload, clientChan chan Payload, replyChan chan<- Payload) *commChannel {
+	return &commChannel{serverChan: serverChan, clientChan: clientChan, replyChan: replyChan}
 }
 
 var gameOver = false
@@ -84,40 +87,31 @@ func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 
 // Tapped overrides onClick listener
 func (g *gridBox) Tapped(_ *fyne.PointEvent) {
-	if g.textVal.Text != "" || gameOver || isMyTurn.IsNotSet() {
+	if g.textVal.Text != "" || gameOver || isMyTurn.IsNotSet() || IsReady.IsNotSet() {
 		//already filled
 		return
-	} else if IsReady.IsNotSet() {
-		return
 	}
-	//if isPlayerXTurn {
-	//	g.textVal.Text = player.X.String()
-	//	isPlayerXTurn = false
-	//	gameRecord[g.Index] = player.X
-	//} else {
-	//	g.textVal.Text = player.O.String()
-	//	isPlayerXTurn = true
-	//	gameRecord[g.Index] = player.O
-	//}
+	log.Println("i am here")
 
-	for payload := range *g.commChannel.clientChan {
+	for payload := range g.commChannel.clientChan {
 		switch payload.MessageType {
 		case MOVE:
 			if isMyTurn.IsSet() {
 				isMyTurn.UnSet()
 				g.textVal.Text = MyCurrentSymbol.ValString.String()
+				g.Refresh()
 				gameRecord[g.Index] = MyCurrentSymbol.ValString.String()
 				pp := Payload{
 					MessageType: MOVE,
 					Content:     fmt.Sprintf("%d", g.Index),
 					FromUser:    MyCurrentSymbol.ValString.String(),
 				}
-				*g.clientChan <- pp
+				g.clientChan <- pp
 
 			} else {
 				isMyTurn.UnSet()
 				targetIndex, _ := strconv.Atoi(payload.Content)
-				markGridBox(targetIndex, payload.FromUser)
+				placeOpponentMark(targetIndex, payload.FromUser)
 			}
 
 		case WIN:
@@ -127,8 +121,7 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 				time.Sleep(500 * time.Millisecond)
 				g.displayWinner(payload.Content)
 			}()
-			close(*g.serverChan)
-			close(*g.clientChan)
+			close(g.clientChan)
 			return
 		default:
 			log.Println("Unknown command sent")
@@ -195,8 +188,8 @@ func highlightBoxes(arr []int) {
 
 }
 
-// markGridBox at given index with symbol (X or O)
-func markGridBox(targetIndex int, symbolChar string) {
+// placeOpponentMark at given index with symbol (X or O)
+func placeOpponentMark(targetIndex int, symbolChar string) {
 	for i, box := range gridMap {
 		if i == targetIndex {
 			box.textVal.Text = symbolChar

@@ -22,7 +22,9 @@ fyne package
 6. For an optimized, smaller package (50% smaller), use command below. Icon will be automatically attached.
 
 ```bash
-# Flag --id (appID) is required. See docs https://developer.fyne.io/started/distribution
+# Simple, without icon
+fyne build --release
+# OR with icon, Flag --id (appID) is required. See docs https://developer.fyne.io/started/distribution
 fyne package --release --id com.yourdomain.appName
 ```
 
@@ -36,5 +38,5 @@ Free Icon by [Vlad Marin, IconFinder](https://www.iconfinder.com/icons/190320/ga
 
 ## Pull Requests & Contributions
 
-So much improvement can be done on the game. This is as simple as it can be. Pull requests and issues are much welcome.
+So much improvement can be done on the game. Pull requests and issues are much welcome.
 

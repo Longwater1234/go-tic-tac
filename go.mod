@@ -4,7 +4,8 @@ go 1.18
 
 require (
 	fyne.io/fyne/v2 v2.3.0
-	golang.org/x/exp v0.0.0-20230118134722-a68e582fa157
+	github.com/pkg/errors v0.8.1
+	github.com/tevino/abool v1.2.0
 	golang.org/x/net v0.0.0-20211118161319-6a13c67c3ce4
 )
 
@@ -28,7 +29,6 @@ require (
 	github.com/srwiley/oksvg v0.0.0-20220731023508-a61f04f16b76 // indirect
 	github.com/srwiley/rasterx v0.0.0-20210519020934-456a8d69b780 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
-	github.com/tevino/abool v1.2.0 // indirect
 	github.com/yuin/goldmark v1.4.0 // indirect
 	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
 	golang.org/x/mobile v0.0.0-20211207041440-4e6c2922fdee // indirect
