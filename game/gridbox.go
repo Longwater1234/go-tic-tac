@@ -26,6 +26,7 @@ var gameRecord map[int]string //keeps record of the game (cellIndex -> symbol)
 // var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
 var gridMap map[int]*gridBox      //maps cellIndex to gridBox
 var IsMyTurn abool.AtomicBool = 1 // player turn,  default starts with X (player 1)
+var IsReady abool.AtomicBool = 0  //whether match is ready to start
 
 type PieceType struct {
 	ValString player.SymbolGame
@@ -85,32 +86,29 @@ func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 
 // Tapped overrides onClick listener
 func (g *gridBox) Tapped(_ *fyne.PointEvent) {
-	if g.textVal.Text != "" || gameOver || IsMyTurn.IsNotSet() {
+	if g.textVal.Text != "" || gameOver || IsReady.IsNotSet() {
 		//already filled
 		return
 	}
 	log.Println("i am here")
 
-	for payload := range g.commChannel.clientChan {
+	if IsMyTurn.IsSet() {
+		g.textVal.Text = MyCurrentSymbol.ValString.String()
+		g.Refresh()
+		gameRecord[g.Index] = MyCurrentSymbol.ValString.String()
+		pp := Payload{
+			MessageType: MOVE,
+			Content:     fmt.Sprintf("%d", g.Index),
+			FromUser:    MyCurrentSymbol.ValString.String(),
+		}
+		g.replyChan <- pp
+		IsMyTurn.UnSet()
+	} else {
+		payload := <-g.commChannel.clientChan
 		switch payload.MessageType {
 		case MOVE:
-			if IsMyTurn.IsSet() {
-				IsMyTurn.UnSet()
-				g.textVal.Text = MyCurrentSymbol.ValString.String()
-				g.Refresh()
-				gameRecord[g.Index] = MyCurrentSymbol.ValString.String()
-				pp := Payload{
-					MessageType: MOVE,
-					Content:     fmt.Sprintf("%d", g.Index),
-					FromUser:    MyCurrentSymbol.ValString.String(),
-				}
-				g.replyChan <- pp
-
-			} else {
-				IsMyTurn.UnSet()
-				targetIndex, _ := strconv.Atoi(payload.Content)
-				placeOpponentMark(targetIndex, payload.FromUser)
-			}
+			targetIndex, _ := strconv.Atoi(payload.Content)
+			placeOpponentMark(targetIndex, payload.FromUser)
 
 		case WIN:
 		case LOSE:
@@ -120,16 +118,14 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 				g.displayWinner(payload.Content)
 			}()
 			close(g.clientChan)
-			return
-		default:
-			log.Println("Unknown command sent")
 		}
+
 	}
 	if g.allBoxFilled() {
 		return
 	}
-
 	g.Refresh()
+
 }
 
 // NewGridBox creates a new single cell of grid

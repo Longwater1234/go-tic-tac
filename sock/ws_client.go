@@ -23,7 +23,7 @@ func JoinServer(w *fyne.Window, notifChan chan string, serverChan, clientChan, r
 	}
 	defer ws.Close()
 
-	go func() {
+	go func(ws *websocket.Conn) {
 		for {
 			var payload game.Payload
 			err = websocket.JSON.Receive(ws, &payload)
@@ -33,13 +33,14 @@ func JoinServer(w *fyne.Window, notifChan chan string, serverChan, clientChan, r
 			}
 			serverChan <- payload
 		}
-	}()
+	}(ws)
 
 	for {
 		select {
 		case payload := <-serverChan:
 			switch payload.MessageType {
 			case game.START:
+				game.IsReady.Set()
 				if game.MyCurrentSymbol.ValString == player.X {
 					log.Println("game ready")
 					notifChan <- payload.Content
