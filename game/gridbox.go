@@ -25,7 +25,7 @@ var _ fyne.Tappable = (*gridBox)(nil)
 var gameRecord map[int]string //keeps record of the game (cellIndex -> symbol)
 // var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
 var gridMap map[int]*gridBox      //maps cellIndex to gridBox
-var isMyTurn abool.AtomicBool = 1 // player turn,  default starts with X (player 1)
+var IsMyTurn abool.AtomicBool = 1 // player turn,  default starts with X (player 1)
 
 type PieceType struct {
 	ValString player.SymbolGame
@@ -38,17 +38,15 @@ func (t *PieceType) SetPieceType(val string) {
 	if val == player.X.String() {
 		t.ValString = player.X
 		log.Println("i am player x")
-		isMyTurn.Set()
+		IsMyTurn.Set()
 	} else {
 		t.ValString = player.O
 		log.Println("i am player O")
-		isMyTurn.UnSet()
+		IsMyTurn.UnSet()
 	}
 }
 
 var MyCurrentSymbol PieceType //default X
-
-var IsReady abool.AtomicBool = 0
 
 func UpdateSymbol(val string) {
 	MyCurrentSymbol.SetPieceType(val)
@@ -68,13 +66,13 @@ type gridBox struct {
 
 // For communicating with game server
 type commChannel struct {
-	serverChan <-chan Payload //recieves messages from server
-	clientChan chan Payload   // sends messages to Server
-	replyChan  chan<- Payload
+	serverChan chan Payload //recieves messages from server
+	clientChan chan Payload // sends messages to Server
+	replyChan  chan Payload
 }
 
 // NewCommChannel constructor
-func NewCommChannel(serverChan <-chan Payload, clientChan chan Payload, replyChan chan<- Payload) *commChannel {
+func NewCommChannel(serverChan chan Payload, clientChan chan Payload, replyChan chan Payload) *commChannel {
 	return &commChannel{serverChan: serverChan, clientChan: clientChan, replyChan: replyChan}
 }
 
@@ -87,7 +85,7 @@ func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 
 // Tapped overrides onClick listener
 func (g *gridBox) Tapped(_ *fyne.PointEvent) {
-	if g.textVal.Text != "" || gameOver || isMyTurn.IsNotSet() || IsReady.IsNotSet() {
+	if g.textVal.Text != "" || gameOver || IsMyTurn.IsNotSet() {
 		//already filled
 		return
 	}
@@ -96,8 +94,8 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 	for payload := range g.commChannel.clientChan {
 		switch payload.MessageType {
 		case MOVE:
-			if isMyTurn.IsSet() {
-				isMyTurn.UnSet()
+			if IsMyTurn.IsSet() {
+				IsMyTurn.UnSet()
 				g.textVal.Text = MyCurrentSymbol.ValString.String()
 				g.Refresh()
 				gameRecord[g.Index] = MyCurrentSymbol.ValString.String()
@@ -106,10 +104,10 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 					Content:     fmt.Sprintf("%d", g.Index),
 					FromUser:    MyCurrentSymbol.ValString.String(),
 				}
-				g.clientChan <- pp
+				g.replyChan <- pp
 
 			} else {
-				isMyTurn.UnSet()
+				IsMyTurn.UnSet()
 				targetIndex, _ := strconv.Atoi(payload.Content)
 				placeOpponentMark(targetIndex, payload.FromUser)
 			}

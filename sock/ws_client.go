@@ -15,7 +15,7 @@ const origin = "http://localhost/"
 const endpoint = "ws://localhost:9876/ws"
 
 // JoinServer of game and handle responses
-func JoinServer(serverChan <-chan game.Payload, w *fyne.Window, notifChan chan string, clientChan chan game.Payload) {
+func JoinServer(w *fyne.Window, notifChan chan string, serverChan, clientChan, replyChan chan game.Payload) {
 	ws, err := websocket.Dial(endpoint, "", origin)
 	if err != nil {
 		showErrorAndQuit(w, err)
@@ -23,31 +23,45 @@ func JoinServer(serverChan <-chan game.Payload, w *fyne.Window, notifChan chan s
 	}
 	defer ws.Close()
 
-	for {
-		var payload game.Payload
-		err = websocket.JSON.Receive(ws, &payload)
-		if err != nil {
-			showErrorAndQuit(w, err)
-			return
-		}
-
-		switch payload.MessageType {
-		case game.START:
-			if game.MyCurrentSymbol.ValString == player.X {
-				log.Println("game ready")
-				notifChan <- payload.Content
-				game.IsReady.Set()
+	go func() {
+		for {
+			var payload game.Payload
+			err = websocket.JSON.Receive(ws, &payload)
+			if err != nil {
+				showErrorAndQuit(w, err)
+				return
 			}
-		case game.WELCOME:
-			notifChan <- payload.Content
-			game.UpdateSymbol(payload.FromUser)
-		case game.MOVE:
-			clientChan <- payload
-		case game.EXIT:
-			notifChan <- payload.Content
-			ws.Close()
+			serverChan <- payload
 		}
+	}()
 
+	for {
+		select {
+		case payload := <-serverChan:
+			switch payload.MessageType {
+			case game.START:
+				if game.MyCurrentSymbol.ValString == player.X {
+					log.Println("game ready")
+					notifChan <- payload.Content
+					game.IsMyTurn.Set()
+				}
+			case game.WELCOME:
+				notifChan <- payload.Content
+				game.UpdateSymbol(payload.FromUser)
+			case game.MOVE:
+				clientChan <- payload
+			case game.EXIT:
+				notifChan <- payload.Content
+				ws.Close()
+				return
+			}
+		case uiResponse := <-replyChan:
+			err = websocket.JSON.Send(ws, uiResponse)
+			if err != nil {
+				showErrorAndQuit(w, err)
+				return
+			}
+		}
 	}
 
 }
