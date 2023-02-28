@@ -22,11 +22,11 @@ import (
 
 var _ fyne.Tappable = (*gridBox)(nil)
 
-var gameRecord map[int]string //keeps record of the game (cellIndex -> symbol)
-// var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
+var gameRecord map[int]string     //keeps record of the game (cellIndex -> symbol)
 var gridMap map[int]*gridBox      //maps cellIndex to gridBox
 var IsMyTurn abool.AtomicBool = 1 // player turn,  default starts with X (player 1)
 var IsReady abool.AtomicBool = 0  //whether match is ready to start
+var gameOver = false              //whether game is over
 
 type PieceType struct {
 	ValString player.SymbolGame
@@ -77,8 +77,6 @@ func NewCommChannel(serverChan chan Payload, clientChan chan Payload, replyChan 
 	return &commChannel{serverChan: serverChan, clientChan: clientChan, replyChan: replyChan}
 }
 
-var gameOver = false
-
 // CreateRenderer for custom widgets
 func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(g.container)
@@ -90,7 +88,8 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 		//already filled
 		return
 	}
-	log.Println("i am here")
+
+	log.Printf("Tapped gridIndex %d", g.Index)
 
 	if IsMyTurn.IsSet() {
 		g.textVal.Text = MyCurrentSymbol.ValString.String()
@@ -104,7 +103,7 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 		g.replyChan <- pp
 		IsMyTurn.UnSet()
 	} else {
-		payload := <-g.commChannel.clientChan
+		payload := <-g.clientChan
 		switch payload.MessageType {
 		case MOVE:
 			targetIndex, _ := strconv.Atoi(payload.Content)
@@ -118,8 +117,9 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 				g.displayWinner(payload.Content)
 			}()
 			close(g.clientChan)
+		default:
+			log.Println("unknown command recieved ", payload)
 		}
-
 	}
 	if g.allBoxFilled() {
 		return

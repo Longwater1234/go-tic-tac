@@ -41,14 +41,14 @@ func JoinServer(w *fyne.Window, notifChan chan string, serverChan, clientChan, r
 			switch payload.MessageType {
 			case game.START:
 				game.IsReady.Set()
-				if game.MyCurrentSymbol.ValString == player.X {
-					log.Println("game ready")
-					notifChan <- payload.Content
+				log.Println("game ready")
+				notifChan <- payload.Content
+				game.UpdateSymbol(payload.FromUser)
+				if payload.FromUser == player.X.String() {
 					game.IsMyTurn.Set()
 				}
 			case game.WELCOME:
 				notifChan <- payload.Content
-				game.UpdateSymbol(payload.FromUser)
 			case game.MOVE:
 				clientChan <- payload
 			case game.EXIT:
