@@ -43,21 +43,23 @@ func JoinServer(w *fyne.Window, notifChan chan string, serverChan, clientChan, r
 				game.IsReady.Set()
 				log.Println("game ready")
 				notifChan <- payload.Content
-				game.UpdateSymbol(payload.FromUser)
 				if payload.FromUser == player.X.String() {
 					game.IsMyTurn.Set()
 				}
 			case game.WELCOME:
 				notifChan <- payload.Content
+				game.UpdateSymbol(payload.FromUser)
 			case game.MOVE:
 				clientChan <- payload
 			case game.EXIT:
 				notifChan <- payload.Content
 				ws.Close()
-				return
+				close(clientChan)
+			default:
+				break
 			}
 		case uiResponse := <-replyChan:
-			err = websocket.JSON.Send(ws, uiResponse)
+			err = websocket.JSON.Send(ws, &uiResponse)
 			if err != nil {
 				showErrorAndQuit(w, err)
 				return

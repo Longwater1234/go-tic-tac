@@ -31,10 +31,10 @@ func main() {
 
 	textPanel := canvas.NewText("Connecting", color.White)
 	grid := container.New(layout.NewGridLayout(3))
-	serverChan := make(chan game.Payload)    //for full responses from server
-	clientChan := make(chan game.Payload, 1) //for full responses to server
-	replyChan := make(chan game.Payload)     //for full responses to server
-	notifChan := make(chan string)           // for on-screen notifications
+	serverChan := make(chan game.Payload)   //for full responses from server
+	clientChan := make(chan game.Payload)   //for full responses to server
+	replyChan := make(chan game.Payload, 1) //for full responses to server
+	notifChan := make(chan string, 1)       // for on-screen notifications
 
 	for i := 0; i < 9; i++ {
 		rect := canvas.NewRectangle(color.RGBA{

@@ -15,7 +15,6 @@ import (
 	"go-tic-tac/player"
 	"image/color"
 	"log"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -69,7 +68,7 @@ type gridBox struct {
 type commChannel struct {
 	serverChan chan Payload //recieves messages from server
 	clientChan chan Payload // sends messages to Server
-	replyChan  chan Payload
+	replyChan  chan Payload //sends message to UI controller
 }
 
 // NewCommChannel constructor
@@ -93,21 +92,24 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 
 	if IsMyTurn.IsSet() {
 		g.textVal.Text = MyCurrentSymbol.ValString.String()
-		g.Refresh()
 		gameRecord[g.Index] = MyCurrentSymbol.ValString.String()
 		pp := Payload{
 			MessageType: MOVE,
 			Content:     fmt.Sprintf("%d", g.Index),
 			FromUser:    MyCurrentSymbol.ValString.String(),
 		}
-		g.replyChan <- pp
 		IsMyTurn.UnSet()
+		g.replyChan <- pp
 	} else {
 		payload := <-g.clientChan
 		switch payload.MessageType {
 		case MOVE:
-			targetIndex, _ := strconv.Atoi(payload.Content)
-			placeOpponentMark(targetIndex, payload.FromUser)
+			//targetIndex, _ := strconv.Atoi(payload.Content)
+			g.textVal.Text = payload.FromUser
+			gameRecord[g.Index] = payload.FromUser
+			g.Refresh()
+			IsMyTurn.Set()
+			break
 
 		case WIN:
 		case LOSE:
@@ -116,16 +118,17 @@ func (g *gridBox) Tapped(_ *fyne.PointEvent) {
 				time.Sleep(500 * time.Millisecond)
 				g.displayWinner(payload.Content)
 			}()
-			close(g.clientChan)
+			break
 		default:
 			log.Println("unknown command recieved ", payload)
+			break
 		}
 	}
+
 	if g.allBoxFilled() {
 		return
 	}
 	g.Refresh()
-
 }
 
 // NewGridBox creates a new single cell of grid
