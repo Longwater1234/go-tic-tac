@@ -44,8 +44,8 @@ func main() {
 			A: 255,
 		})
 
-		gridBox := game.NewGridBox(rect, i, &w)
-		grid.Add(gridBox)
+		gridCell := game.NewGridCell(rect, i, &w)
+		grid.Add(gridCell)
 	}
 
 	w.SetContent(grid)

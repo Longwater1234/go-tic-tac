@@ -17,15 +17,15 @@ import (
 	"time"
 )
 
-var _ fyne.Tappable = (*gridBox)(nil)
+var _ fyne.Tappable = (*gridCell)(nil)
 
 var gameRecord map[int]player.SymbolGame  //keeps record of the game (cellIndex -> symbol)
 var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
-var gridMap map[int]*gridBox              //maps cellIndex to gridBox
+var gridMap map[int]*gridCell             //maps cellIndex to gridCell
 
 // Single cell inside the 3x3 grid.
 // Custom widget. See https://developer.fyne.io/extend/custom-widget
-type gridBox struct {
+type gridCell struct {
 	widget.BaseWidget
 	Index     int               //cell index
 	rectangle *canvas.Rectangle //background of cell
@@ -39,12 +39,12 @@ var isPlayerXTurn = true
 var gameOver = false
 
 // CreateRenderer for custom widgets
-func (g *gridBox) CreateRenderer() fyne.WidgetRenderer {
+func (g *gridCell) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(g.container)
 }
 
 // Tapped overrides onClick listener
-func (g *gridBox) Tapped(*fyne.PointEvent) {
+func (g *gridCell) Tapped(*fyne.PointEvent) {
 	if g.textVal.Text != "" || gameOver {
 		//already filled
 		return
@@ -73,8 +73,8 @@ func (g *gridBox) Tapped(*fyne.PointEvent) {
 	g.Refresh()
 }
 
-// NewGridBox creates a new single cell for grid
-func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gridBox {
+// NewGridCell creates a new single cell for grid
+func NewGridCell(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gridCell {
 	tv := &canvas.Text{
 		Text:      "",
 		Alignment: fyne.TextAlignCenter,
@@ -82,7 +82,7 @@ func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gr
 		TextSize:  float32(80),
 	}
 
-	g := &gridBox{
+	g := &gridCell{
 		Index:     Index,
 		rectangle: rectangle,
 		textVal:   tv,
@@ -95,7 +95,7 @@ func NewGridBox(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gr
 }
 
 // checks if all cells filled. If true, game over
-func (g *gridBox) allBoxFilled() bool {
+func (g *gridCell) allBoxFilled() bool {
 	if len(gameRecord) == 9 {
 		d := dialog.NewInformation("Game Over", "It's a draw", *g.window)
 		d.SetOnClosed(func() {
@@ -109,7 +109,7 @@ func (g *gridBox) allBoxFilled() bool {
 }
 
 // getWinner of the match
-func (g *gridBox) getWinner() string {
+func (g *gridCell) getWinner() string {
 	var p = playerState[g.textVal.Text]
 	p.Vals = append(p.Vals, g.Index)
 
@@ -139,7 +139,7 @@ func highlightBoxes(arr []int) {
 }
 
 // displayWinner and exit game
-func (g *gridBox) displayWinner(msg string) {
+func (g *gridCell) displayWinner(msg string) {
 	d := dialog.NewInformation("Game Over!", msg, *g.window)
 	d.SetOnClosed(func() {
 		fyne.CurrentApp().Quit()
@@ -151,7 +151,7 @@ func (g *gridBox) displayWinner(msg string) {
 // InitializeRecord for the game
 func InitializeRecord() {
 	gameRecord = make(map[int]player.SymbolGame)
-	gridMap = make(map[int]*gridBox)
+	gridMap = make(map[int]*gridCell)
 	gameOver = false
 }
 
