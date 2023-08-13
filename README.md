@@ -8,6 +8,9 @@ very tiny, lightweight, and can handle lots of concurrent players without sweati
 - Learn more about Fyne at https://developer.fyne.io/started/
 - Official GitHub for Fyne: https://github.com/fyne-io/fyne
 
+### Screenshot
+![screenshot.PNG](screenshot.PNG)
+
 ## Requirements
 
 - Go 1.19 or higher
