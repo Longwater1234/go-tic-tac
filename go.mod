@@ -4,7 +4,8 @@ go 1.19
 
 require (
 	fyne.io/fyne/v2 v2.3.0
-	golang.org/x/exp v0.0.0-20230810033253-352e893a4cad
+	github.com/pkg/errors v0.9.1
+	golang.org/x/net v0.6.0
 )
 
 require (
@@ -31,7 +32,6 @@ require (
 	github.com/yuin/goldmark v1.4.13 // indirect
 	golang.org/x/image v0.1.0 // indirect
 	golang.org/x/mobile v0.0.0-20211207041440-4e6c2922fdee // indirect
-	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

@@ -9,19 +9,40 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"go-tic-tac/player"
 	"image/color"
 	"log"
-	"time"
+	"sync"
+	"sync/atomic"
 )
 
 var _ fyne.Tappable = (*gridCell)(nil)
 
-var gameRecord map[int]player.SymbolGame  //keeps record of the game (cellIndex -> symbol)
-var playerState map[string]*player.Player //keeps record of the player (playerName -> []indexes)
-var gridMap map[int]*gridCell             //maps cellIndex to gridCell
+var gameRecord map[int]string // keeps record of the game (cellIndex -> symbol)
+var gridMap map[int]*gridCell // maps cellIndex to gridCell
+var IsMyTurn atomic.Bool      // player turn,  default starts with X (player 1)
+var IsReady atomic.Bool       // whether match is ready to start
+var Over atomic.Bool          // whether game is over
+var mu sync.Mutex
+
+var myPieceType player.SymbolGame //can be either `X` or `O`
+
+// SetMyPieceType for current match
+func SetMyPieceType(val string) {
+	mu.Lock()
+	defer mu.Unlock()
+	if val == player.X.String() {
+		myPieceType = player.X
+		log.Println("i am player X")
+		IsMyTurn.Store(true)
+	} else {
+		myPieceType = player.O
+		log.Println("i am player O")
+		IsMyTurn.Store(false)
+	}
+
+}
 
 // Single cell inside the 3x3 grid.
 // Custom widget. See https://developer.fyne.io/extend/custom-widget
@@ -32,11 +53,8 @@ type gridCell struct {
 	textVal   *canvas.Text      //text box
 	container *fyne.Container   //hosts textVal and rectangle
 	window    *fyne.Window      //master window
+	replyChan chan Payload      //for messages from client UI to server
 }
-
-// default starts with X
-var isPlayerXTurn = true
-var gameOver = false
 
 // CreateRenderer for custom widgets
 func (g *gridCell) CreateRenderer() fyne.WidgetRenderer {
@@ -44,37 +62,30 @@ func (g *gridCell) CreateRenderer() fyne.WidgetRenderer {
 }
 
 // Tapped overrides onClick listener
-func (g *gridCell) Tapped(*fyne.PointEvent) {
-	if g.textVal.Text != "" || gameOver {
+func (g *gridCell) Tapped(_ *fyne.PointEvent) {
+	if g.textVal.Text != "" || Over.Load() || !IsReady.Load() {
 		//already filled
 		return
 	}
-	if isPlayerXTurn {
-		g.textVal.Text = player.X.String()
-		isPlayerXTurn = false
-		gameRecord[g.Index] = player.X
-	} else {
-		g.textVal.Text = player.O.String()
-		isPlayerXTurn = true
-		gameRecord[g.Index] = player.O
-	}
 
-	if g.getWinner() != "" {
-		gameOver = true
-		go func() {
-			time.Sleep(500 * time.Millisecond)
-			g.displayWinner(g.getWinner())
-		}()
-		return
-	}
-	if g.allBoxFilled() {
-		return
+	log.Printf("I tapped gridIndex %d", g.Index)
+
+	if IsMyTurn.Load() {
+		g.textVal.Text = myPieceType.String()
+		gameRecord[g.Index] = myPieceType.String()
+		pp := Payload{
+			MessageType: MOVE,
+			Content:     fmt.Sprintf("%d", g.Index),
+			FromUser:    myPieceType.String(),
+		}
+		IsMyTurn.Swap(false)
+		g.replyChan <- pp
 	}
 	g.Refresh()
 }
 
-// NewGridCell creates a new single cell for grid
-func NewGridCell(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *gridCell {
+// NewGridCell creates a new single cell of 3x3 grid
+func NewGridCell(rectangle *canvas.Rectangle, index int, window *fyne.Window, replyChan chan Payload) *gridCell {
 	tv := &canvas.Text{
 		Text:      "",
 		Alignment: fyne.TextAlignCenter,
@@ -83,85 +94,55 @@ func NewGridCell(rectangle *canvas.Rectangle, Index int, window *fyne.Window) *g
 	}
 
 	g := &gridCell{
-		Index:     Index,
+		Index:     index,
 		rectangle: rectangle,
 		textVal:   tv,
 		container: container.NewMax(rectangle, tv),
 		window:    window,
+		replyChan: replyChan,
 	}
 	g.ExtendBaseWidget(g)
-	gridMap[Index] = g
+	gridMap[index] = g
 	return g
 }
 
-// checks if all cells filled. If true, game over
-func (g *gridCell) allBoxFilled() bool {
-	if len(gameRecord) == 9 {
-		d := dialog.NewInformation("Game Over", "It's a draw", *g.window)
-		d.SetOnClosed(func() {
-			fyne.CurrentApp().Quit()
-		})
-		d.Resize(fyne.NewSize(300, 100))
-		d.Show()
-		return true
+// HighlightBoxes with either GREEN or RED, depending on whether I have won or not
+func HighlightBoxes(arr []int, won bool) {
+	//RED
+	fillColor := color.NRGBA{
+		R: 255,
+		A: 255,
 	}
-	return false
-}
-
-// getWinner of the match
-func (g *gridCell) getWinner() string {
-	var p = playerState[g.textVal.Text]
-	p.Vals = append(p.Vals, g.Index)
-
-	//log.Printf("Game scoreboard %v", gameRecord)
-
-	if ok, arr := p.HasWon(); ok {
-		highlightBoxes(arr)
-		return fmt.Sprintf("Player %s has Won!", p.Name)
+	if won {
+		//GREEN
+		fillColor = color.NRGBA{
+			G: 255,
+			A: 255,
+		}
 	}
-	return ""
-}
-
-// highlightBoxes green color (winning cells)
-func highlightBoxes(arr []int) {
 	for _, v := range arr {
-		if g, ok := gridMap[v]; ok {
-			g.rectangle.FillColor = color.RGBA{
-				R: 0,
-				G: 255,
-				B: 0,
-				A: 255,
-			}
+		if g, exists := gridMap[v]; exists {
+			g.rectangle.FillColor = fillColor
 			g.Refresh()
 		}
 	}
-
 }
 
-// displayWinner and exit game
-func (g *gridCell) displayWinner(msg string) {
-	d := dialog.NewInformation("Game Over!", msg, *g.window)
-	d.SetOnClosed(func() {
-		fyne.CurrentApp().Quit()
-	})
-	d.Resize(fyne.NewSize(300, 100))
-	d.Show()
+// PlaceOpponentMark at given index with symbol (X or O)
+func PlaceOpponentMark(targetIndex int, symbolChar string) {
+	for i, box := range gridMap {
+		if i == targetIndex {
+			box.textVal.Text = symbolChar
+			gameRecord[targetIndex] = symbolChar
+			box.Refresh()
+			break
+		}
+	}
 }
 
 // InitializeRecord for the game
 func InitializeRecord() {
-	gameRecord = make(map[int]player.SymbolGame)
+	gameRecord = make(map[int]string)
 	gridMap = make(map[int]*gridCell)
-	gameOver = false
-}
-
-// InitializePlayers of the game, must be two exactly
-func InitializePlayers(p []player.Player) {
-	if len(p) != 2 {
-		log.Fatalf("players must be exactly 2, provided %d", len(p))
-	}
-	playerState = map[string]*player.Player{
-		p[0].Name: &p[0],
-		p[1].Name: &p[1],
-	}
+	Over.Swap(false)
 }
