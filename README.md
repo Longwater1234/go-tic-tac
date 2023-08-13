@@ -1,6 +1,6 @@
 # go-tic-tac
 
-Multiplayer tic-tac-toe game written 100% in Golang and Fyne GUI framework, with Websockets. Works for Windows, macOS and
+Multiplayer tic-tac-toe game written 100% in Golang, using Fyne GUI toolkit and Websockets. Works for Windows, macOS and
 Linux. **IMPORTANT**: You will also need a running _game
 server_, [available here](https://github.com/Longwater1234/server-tic-tac), also written in Golang. The server is
 very tiny, lightweight, and can handle lots of concurrent players without sweating your RAM or CPU.
