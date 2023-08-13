@@ -94,8 +94,8 @@ uiLoop:
 				break uiLoop
 			}
 		default:
-			//TODO add a countdown timer for 20 sec. if no move after expiry, force exit game
-			// else reset the timer. repeat loop
+			//TODO add a countdown timer for 20 sec. if no move after timeout, force exit game.
+			// Otherwise reset the timer. Repeat loop
 			continue
 		}
 
