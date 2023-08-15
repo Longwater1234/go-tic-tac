@@ -60,7 +60,7 @@ func JoinServer(w *fyne.Window, notifChan chan string, replyChan chan game.Paylo
 					//opponent played
 					notifChan <- "OPPONENT PLAYED " + payload.Content + ". Your turn"
 					targetIndex, _ := strconv.Atoi(payload.Content)
-					game.PlaceOpponentMark(targetIndex, payload.FromUser)
+					game.PlaceOpponentPiece(targetIndex, payload.FromUser)
 					game.IsMyTurn.Swap(true)
 				}
 
@@ -114,7 +114,7 @@ func showErrorAndQuit(w *fyne.Window, err error) {
 	})
 }
 
-// display Match winner or loser, and exit
+// display Match winner or if Draw, and exit
 func showLoserWinner(w *fyne.Window, msg string) {
 	d := dialog.NewInformation("Game over!", msg, *w)
 	d.Show()
