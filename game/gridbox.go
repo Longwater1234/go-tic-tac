@@ -17,6 +17,7 @@ import (
 	"sync/atomic"
 )
 
+// force implementation
 var _ fyne.Tappable = (*gridCell)(nil)
 
 var gameRecord map[int]string // keeps record of the game (cellIndex -> symbol)
@@ -50,8 +51,8 @@ type gridCell struct {
 	widget.BaseWidget
 	Index     int               //cell index
 	rectangle *canvas.Rectangle //background of cell
-	textVal   *canvas.Text      //text box
-	container *fyne.Container   //hosts textVal and rectangle
+	textBox   *canvas.Text      //text box
+	container *fyne.Container   //hosts textBox and rectangle
 	window    *fyne.Window      //master window
 	replyChan chan Payload      //for messages from client UI to server
 }
@@ -63,7 +64,7 @@ func (g *gridCell) CreateRenderer() fyne.WidgetRenderer {
 
 // Tapped overrides onClick listener
 func (g *gridCell) Tapped(_ *fyne.PointEvent) {
-	if g.textVal.Text != "" || Over.Load() || !IsReady.Load() {
+	if g.textBox.Text != "" || Over.Load() || !IsReady.Load() {
 		//already filled
 		return
 	}
@@ -71,7 +72,7 @@ func (g *gridCell) Tapped(_ *fyne.PointEvent) {
 	log.Printf("I tapped gridIndex %d", g.Index)
 
 	if IsMyTurn.Load() {
-		g.textVal.Text = myPieceType.String()
+		g.textBox.Text = myPieceType.String()
 		gameRecord[g.Index] = myPieceType.String()
 		pp := Payload{
 			MessageType: MOVE,
@@ -96,7 +97,7 @@ func NewGridCell(rectangle *canvas.Rectangle, index int, window *fyne.Window, re
 	g := &gridCell{
 		Index:     index,
 		rectangle: rectangle,
-		textVal:   tv,
+		textBox:   tv,
 		container: container.NewMax(rectangle, tv),
 		window:    window,
 		replyChan: replyChan,
@@ -128,13 +129,13 @@ func HighlightBoxes(arr []int, won bool) {
 	}
 }
 
-// PlaceOpponentMark at given index with symbol (X or O)
-func PlaceOpponentMark(targetIndex int, symbolChar string) {
-	for i, box := range gridMap {
+// PlaceOpponentPiece at given index with symbol (X or O)
+func PlaceOpponentPiece(targetIndex int, symbolChar string) {
+	for i, cell := range gridMap {
 		if i == targetIndex {
-			box.textVal.Text = symbolChar
+			cell.textBox.Text = symbolChar
 			gameRecord[targetIndex] = symbolChar
-			box.Refresh()
+			cell.Refresh()
 			break
 		}
 	}

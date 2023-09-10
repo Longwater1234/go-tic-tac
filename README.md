@@ -1,14 +1,20 @@
 # go-tic-tac
 
 Multiplayer tic-tac-toe game written 100% in Golang, using Fyne GUI toolkit and Websockets. Works for Windows, macOS and
-Linux. **IMPORTANT**: You will also need a running _game
-server_, [available here](https://github.com/Longwater1234/server-tic-tac), also written in Golang. The server is
-very tiny, lightweight, and can handle lots of concurrent players without sweating your RAM or CPU.
+Linux.
+
 
 - Learn more about Fyne at https://developer.fyne.io/started/
 - Official GitHub for Fyne: https://github.com/fyne-io/fyne
 
+## Game Server
+
+You will also need a running _gameserver_, [available here](https://github.com/Longwater1234/server-tic-tac), also
+written in Golang. The server is very tiny (~5MB), lightweight, and can handle lots of concurrent players without
+sweating your RAM or CPU. It's purely a console based program.
+
 ### Screenshot
+
 ![screenshot.PNG](screenshot.PNG)
 
 ## Requirements
@@ -16,6 +22,8 @@ very tiny, lightweight, and can handle lots of concurrent players without sweati
 - Go 1.19 or higher
 - C compiler (eg. gcc or Clang), and should be added to your PATH. Follow
   this quick [guide](https://developer.fyne.io/started/#prerequisites)
+- For Windows users, the easiest & fastest way to get GCC, is to install it from [here](https://jmeubank.github.io/tdm-gcc/download/).
+- Other OS, you can use your package manager.
 - Any graphics driver installed.
 
 ## Building locally
