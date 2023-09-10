@@ -82,7 +82,7 @@ func JoinServer(w *fyne.Window, notifChan chan string, replyChan chan game.Paylo
 		}
 	}(ws)
 
-uiLoop:
+replyLoop:
 	for {
 		select {
 		// listen for UI messages, forward them to server
@@ -91,7 +91,7 @@ uiLoop:
 			if err = websocket.JSON.Send(ws, rr); err != nil {
 				close(notifChan)
 				showErrorAndQuit(w, err)
-				break uiLoop
+				break replyLoop
 			}
 		default:
 			//TODO add a countdown timer for 20 sec. if no move after timeout, force exit game.
