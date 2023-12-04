@@ -22,7 +22,7 @@ var _ fyne.Tappable = (*gridCell)(nil)
 
 var gameRecord map[int]string // keeps record of the game (cellIndex -> symbol)
 var gridMap map[int]*gridCell // maps cellIndex to gridCell
-var IsMyTurn atomic.Bool      // player turn,  default starts with X (player 1)
+var isMyTurn atomic.Bool      // player turn,  default starts with X (player 1)
 var IsReady atomic.Bool       // whether match is ready to start
 var Over atomic.Bool          // whether game is over
 var mu sync.Mutex
@@ -36,13 +36,23 @@ func SetMyPieceType(val string) {
 	if val == player.X.String() {
 		myPieceType = player.X
 		log.Println("i am player X")
-		IsMyTurn.Store(true)
+		isMyTurn.Store(true)
 	} else {
 		myPieceType = player.O
 		log.Println("i am player O")
-		IsMyTurn.Store(false)
+		isMyTurn.Store(false)
 	}
+}
 
+// ToggleMyTurn switches current player's turn
+func ToggleMyTurn() {
+	var old = isMyTurn.Load()
+	isMyTurn.Store(!old)
+}
+
+// GetMyTurn returns true if it's my turn
+func GetMyTurn() bool {
+	return isMyTurn.Load()
 }
 
 // Single cell inside the 3x3 grid.
@@ -71,7 +81,7 @@ func (g *gridCell) Tapped(_ *fyne.PointEvent) {
 
 	log.Printf("I tapped gridIndex %d", g.Index)
 
-	if IsMyTurn.Load() {
+	if isMyTurn.Load() {
 		g.textBox.Text = myPieceType.String()
 		gameRecord[g.Index] = myPieceType.String()
 		pp := Payload{
@@ -79,7 +89,7 @@ func (g *gridCell) Tapped(_ *fyne.PointEvent) {
 			Content:     fmt.Sprintf("%d", g.Index),
 			FromUser:    myPieceType.String(),
 		}
-		IsMyTurn.Swap(false)
+		isMyTurn.Swap(false)
 		g.replyChan <- pp
 	}
 	g.Refresh()

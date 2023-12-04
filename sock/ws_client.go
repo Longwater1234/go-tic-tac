@@ -56,12 +56,12 @@ func JoinServer(w *fyne.Window, notifChan chan string, replyChan chan game.Paylo
 				game.IsReady.Store(true)
 
 			case game.MOVE:
-				if !game.IsMyTurn.Load() {
+				if !game.GetMyTurn() {
 					//opponent played
 					notifChan <- "OPPONENT PLAYED " + payload.Content + ". Your turn"
 					targetIndex, _ := strconv.Atoi(payload.Content)
 					game.PlaceOpponentPiece(targetIndex, payload.FromUser)
-					game.IsMyTurn.Swap(true)
+					game.ToggleMyTurn()
 				}
 
 			case game.WIN, game.LOSE:

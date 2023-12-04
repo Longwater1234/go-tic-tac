@@ -31,8 +31,8 @@ func main() {
 	myApp := app.New()
 	w := myApp.NewWindow("Tic-Tac-Tiba")
 
-	textPanel := canvas.NewText("Connecting...", color.White)
-	txtContainer := container.NewMax(canvas.NewRectangle(color.Black), textPanel)
+	textVal := canvas.NewText("Connecting...", color.White)
+	txtContainer := container.NewMax(canvas.NewRectangle(color.Black), textVal)
 
 	grid := container.New(layout.NewGridLayout(3))
 	replyChan := make(chan game.Payload) //from client UI -> SERVER
@@ -55,17 +55,17 @@ func main() {
 	w.SetContent(mainWindow)
 	w.Resize(fyne.NewSize(900, 800))
 	r := fyne.NewStaticResource("Icon.png", icon)
-	w.Show()
 	w.SetIcon(r)
 	w.SetFixedSize(true)
+	w.Show()
 
 	go sock.JoinServer(&w, notifChan, replyChan)
 
 	go func() {
 		//updates the notification box
 		for msg := range notifChan {
-			textPanel.Text = fmt.Sprintf("[%s]: %s", time.Now().Format("15:04:05"), msg)
-			textPanel.Refresh()
+			textVal.Text = fmt.Sprintf("[%s]: %s", time.Now().Format("15:04:05"), msg)
+			textVal.Refresh()
 		}
 	}()
 	myApp.Run()
