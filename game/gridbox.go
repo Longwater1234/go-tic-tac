@@ -75,7 +75,7 @@ func (g *gridCell) CreateRenderer() fyne.WidgetRenderer {
 // Tapped overrides onClick listener
 func (g *gridCell) Tapped(_ *fyne.PointEvent) {
 	if g.textBox.Text != "" || Over.Load() || !IsReady.Load() {
-		//already filled
+		//cannot use this cell
 		return
 	}
 
@@ -117,7 +117,7 @@ func NewGridCell(rectangle *canvas.Rectangle, index int, window *fyne.Window, re
 	return g
 }
 
-// HighlightBoxes with either GREEN or RED, depending on whether I have won or not
+// HighlightBoxes with either GREEN (if I won) or RED (if I lost)
 func HighlightBoxes(arr []int, won bool) {
 	//RED
 	fillColor := color.NRGBA{
