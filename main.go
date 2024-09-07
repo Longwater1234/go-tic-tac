@@ -46,7 +46,7 @@ func main() {
 			B: 0,
 			A: 255,
 		})
-		gridCell := game.NewGridCell(rect, i, &w, replyChan)
+		gridCell := game.NewGridCell(rect, int32(i), &w, replyChan)
 		grid.Add(gridCell)
 	}
 

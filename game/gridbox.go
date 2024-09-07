@@ -6,25 +6,26 @@ package game
 
 import (
 	"fmt"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 	"go-tic-tac/player"
 	"image/color"
 	"log"
 	"sync"
 	"sync/atomic"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 )
 
 // force implementation
 var _ fyne.Tappable = (*gridCell)(nil)
 
-var gameRecord map[int]string // keeps record of the game (cellIndex -> symbol)
-var gridMap map[int]*gridCell // maps cellIndex to gridCell
-var isMyTurn atomic.Bool      // player turn,  default starts with X (player 1)
-var IsReady atomic.Bool       // whether match is ready to start
-var Over atomic.Bool          // whether game is over
+var gameRecord map[int32]string // keeps record of the game (cellIndex -> symbol)
+var gridMap map[int32]*gridCell // maps cellIndex to gridCell
+var isMyTurn atomic.Bool        // player turn,  default starts with X (player 1)
+var IsReady atomic.Bool         // whether match is ready to start
+var Over atomic.Bool            // whether game is over
 var mu sync.Mutex
 
 var myPieceType player.SymbolGame //can be either `X` or `O`
@@ -59,7 +60,7 @@ func GetMyTurn() bool {
 // Custom widget. See https://developer.fyne.io/extend/custom-widget
 type gridCell struct {
 	widget.BaseWidget
-	Index     int               //cell index
+	Index     int32             //cell index
 	rectangle *canvas.Rectangle //background of cell
 	textBox   *canvas.Text      //text box
 	container *fyne.Container   //hosts textBox and rectangle
@@ -96,7 +97,7 @@ func (g *gridCell) Tapped(_ *fyne.PointEvent) {
 }
 
 // NewGridCell creates a new single cell of 3x3 grid
-func NewGridCell(rectangle *canvas.Rectangle, index int, window *fyne.Window, replyChan chan Payload) *gridCell {
+func NewGridCell(rectangle *canvas.Rectangle, index int32, window *fyne.Window, replyChan chan Payload) *gridCell {
 	tv := &canvas.Text{
 		Text:      "",
 		Alignment: fyne.TextAlignCenter,
@@ -132,7 +133,7 @@ func HighlightBoxes(arr []int, won bool) {
 		}
 	}
 	for _, v := range arr {
-		if g, exists := gridMap[v]; exists {
+		if g, exists := gridMap[int32(v)]; exists {
 			g.rectangle.FillColor = fillColor
 			g.Refresh()
 		}
@@ -140,7 +141,7 @@ func HighlightBoxes(arr []int, won bool) {
 }
 
 // PlaceOpponentPiece at given index with symbol (X or O)
-func PlaceOpponentPiece(targetIndex int, symbolChar string) {
+func PlaceOpponentPiece(targetIndex int32, symbolChar string) {
 	for i, cell := range gridMap {
 		if i == targetIndex {
 			cell.textBox.Text = symbolChar
@@ -153,7 +154,7 @@ func PlaceOpponentPiece(targetIndex int, symbolChar string) {
 
 // InitializeRecord for the game
 func InitializeRecord() {
-	gameRecord = make(map[int]string)
-	gridMap = make(map[int]*gridCell)
+	gameRecord = make(map[int32]string)
+	gridMap = make(map[int32]*gridCell)
 	Over.Swap(false)
 }
