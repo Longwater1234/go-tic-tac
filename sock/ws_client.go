@@ -5,6 +5,7 @@
 package sock
 
 import (
+	"errors"
 	"fmt"
 	"go-tic-tac/game"
 	"log"
@@ -12,7 +13,6 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
-	"github.com/pkg/errors"
 	"golang.org/x/net/websocket"
 )
 
@@ -109,7 +109,7 @@ replyLoop:
 
 // display error dialog and exit onClick "OK"
 func showErrorAndQuit(w *fyne.Window, err error) {
-	fmt.Printf("%+v\n", errors.WithStack(err))
+	fmt.Printf("%+v\n", err)
 	d := dialog.NewError(err, *w)
 	d.Show()
 	d.Resize(fyne.NewSize(300, 100))

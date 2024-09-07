@@ -20,7 +20,7 @@ sweating your machine.
 
 ## Requirements
 
-- Go 1.19 or higher
+- Go 1.21 or newer
 - C compiler (eg. gcc or Clang), and should be added to your PATH. Follow
   this quick [guide](https://developer.fyne.io/started/#prerequisites)
 - For Windows users, the easiest & fastest way to get GCC, is to install it
